@@ -1,25 +1,144 @@
+// import { Button } from "@/components/ui/button";
+// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+// import { useNavigate } from "react-router-dom";
+
+// export default function PaymentPage({ amount, country, userId, phone, email }) {
+//   const navigate = useNavigate();
+//   const handlePayment = () => {
+//     const options = {
+//       key: import.meta.env.VITE_ROZARPAY_KEY, // 👈 Replace with your test key
+//       amount: amount * 100, // Razorpay works in paise
+//       currency: country === "IN" ? "INR" : "USD",
+//       name: "Service Booking",
+//       description: `Booking for User ${userId}`,
+//       image: "https://yourlogo.com/logo.png", // optional
+
+//       handler: function (response) {
+//         console.log("Payment Success:", response);
+
+//         alert(
+//           `Payment Successful!\nPayment ID: ${response.razorpay_payment_id}`,
+//         );
+//         navigate("/my-bookings");
+//       },
+
+//       prefill: {
+//         name: userId,
+//         email: email,
+//         contact: phone,
+//       },
+
+//       notes: {
+//         user_id: userId,
+//         country: country,
+//       },
+
+//       theme: {
+//         color: "#0f766e", // teal
+//       },
+//     };
+
+//     const rzp = new window.Razorpay(options);
+//     rzp.open();
+//   };
+
+//   return (
+//     <div className="m flex items-center justify-center bg-gray-100 px-4 py-10">
+//       <Card className="w-full max-w-lg rounded-2xl shadow-md">
+//         <CardHeader>
+//           <CardTitle className="text-center text-2xl">
+//             Complete Payment
+//           </CardTitle>
+//         </CardHeader>
+
+//         <CardContent className="space">
+//           <div className="space-y-2 text-sm">
+//             <div className="flex justify-between">
+//               <span>User ID</span>
+//               <span>{userId}</span>
+//             </div>
+
+//             <div className="flex justify-between">
+//               <span>Email</span>
+//               <span>{email}</span>
+//             </div>
+
+//             <div className="flex justify-between">
+//               <span>Phone</span>
+//               <span>{phone}</span>
+//             </div>
+
+//             <div className="flex justify-between">
+//               <span>Country</span>
+//               <span>{country}</span>
+//             </div>
+
+//             <div className="flex justify-between font-semibold text-lg pt-4 border-t">
+//               <span>Total Amount</span>
+//               <span>
+//                 {country === "IN" ? "₹" : "$"}
+//                 {amount}
+//               </span>
+//             </div>
+//           </div>
+
+//           <Button
+//             onClick={handlePayment}
+//             className="w-full bg-teal-600 hover:bg-teal-700 rounded-xl"
+//           >
+//             Pay Now
+//           </Button>
+//         </CardContent>
+//       </Card>
+//     </div>
+//   );
+// }
+
+// 📄 PaymentPage.jsx (FULL FIXED)
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
-export default function PaymentPage({ amount, country, userId, phone, email }) {
+export default function PaymentPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // ✅ Get data from BookingPage
+  const { amount, country, userId, phone, email, serviceName } =
+    location.state || {};
+
+  // ✅ Safety check (important)
+  if (!amount) {
+    return (
+      <div className="text-center mt-20 text-red-500">
+        Invalid Payment Request ❌
+      </div>
+    );
+  }
+
   const handlePayment = () => {
+    if (!window.Razorpay) {
+      alert("Razorpay SDK not loaded");
+      return;
+    }
+
     const options = {
-      key: import.meta.env.VITE_ROZARPAY_KEY, // 👈 Replace with your test key
-      amount: amount * 100, // Razorpay works in paise
+      key: import.meta.env.VITE_ROZARPAY_KEY, // your key
+      amount: amount * 100,
       currency: country === "IN" ? "INR" : "USD",
       name: "Service Booking",
-      description: `Booking for User ${userId}`,
-      image: "https://yourlogo.com/logo.png", // optional
+      description: serviceName || "Booking Payment",
 
       handler: function (response) {
-        console.log("Payment Success:", response);
+        console.log("✅ Payment Success:", response);
 
-        alert(
-          `Payment Successful!\nPayment ID: ${response.razorpay_payment_id}`,
-        );
-        navigate("/my-bookings");
+        // 👉 Redirect to success page
+        navigate("/success", {
+          state: {
+            bookingId: response.razorpay_payment_id,
+          },
+        });
       },
 
       prefill: {
@@ -34,7 +153,7 @@ export default function PaymentPage({ amount, country, userId, phone, email }) {
       },
 
       theme: {
-        color: "#0f766e", // teal
+        color: "#0f766e",
       },
     };
 
@@ -43,7 +162,7 @@ export default function PaymentPage({ amount, country, userId, phone, email }) {
   };
 
   return (
-    <div className="m flex items-center justify-center bg-gray-100 px-4 py-10">
+    <div className="flex items-center justify-center bg-gray-100 px-4 py-10">
       <Card className="w-full max-w-lg rounded-2xl shadow-md">
         <CardHeader>
           <CardTitle className="text-center text-2xl">
@@ -51,10 +170,10 @@ export default function PaymentPage({ amount, country, userId, phone, email }) {
           </CardTitle>
         </CardHeader>
 
-        <CardContent className="space">
+        <CardContent>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span>User ID</span>
+              <span>Name</span>
               <span>{userId}</span>
             </div>
 
@@ -69,8 +188,8 @@ export default function PaymentPage({ amount, country, userId, phone, email }) {
             </div>
 
             <div className="flex justify-between">
-              <span>Country</span>
-              <span>{country}</span>
+              <span>Service</span>
+              <span>{serviceName}</span>
             </div>
 
             <div className="flex justify-between font-semibold text-lg pt-4 border-t">
@@ -84,7 +203,7 @@ export default function PaymentPage({ amount, country, userId, phone, email }) {
 
           <Button
             onClick={handlePayment}
-            className="w-full bg-teal-600 hover:bg-teal-700 rounded-xl"
+            className="w-full bg-teal-600 hover:bg-teal-700 rounded-xl mt-4"
           >
             Pay Now
           </Button>

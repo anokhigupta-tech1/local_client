@@ -1,25 +1,19 @@
-
 // BookingPage.jsx (Updated with proper available slots display)
 import React, { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Calendar,
   Clock,
-
   CheckCircle,
-
   Loader,
-
   ChevronLeft,
   AlertCircle,
-
   Calendar as CalendarIcon,
 } from "lucide-react";
 import {
   createBooking,
   getAvailableTimeSlots,
 } from "@/services/api/bookingsApi";
-
 
 const BookingPage = () => {
   const location = useLocation();
@@ -135,7 +129,7 @@ const BookingPage = () => {
 
     return availableSlotsList;
   };
-console.log(selectedService)
+  console.log(selectedService);
   // Fetch available slots when date changes
   useEffect(() => {
     if (selectedDate && selectedService) {
@@ -157,7 +151,7 @@ console.log(selectedService)
       //   `/api/available-slots?serviceId=${selectedService.id}&date=${selectedDate}`,
       // );
       // const data = await response.json();
-console.log(response)
+      console.log(response);
       if (response?.success && response?.availableSlots) {
         setAvailableSlots(response?.availableSlots);
       } else {
@@ -250,11 +244,11 @@ console.log(response)
       serviceDate: selectedDate,
       timeSlot: selectedTimeSlot.slot,
       startTime: selectedTimeSlot.startTime,
-      serviceName:"",
+      serviceName: "",
       endTime: selectedTimeSlot.endTime,
       specialRequests: bookingData.specialRequests,
       paymentMethod: bookingData.paymentMethod,
-      totalAmount:selectedService.price,
+      totalAmount: selectedService.price,
       customerDetails: {
         name: bookingData.customerName,
         email: bookingData.customerEmail,
@@ -265,10 +259,25 @@ console.log(response)
     try {
       const response = await createBooking(bookingPayload);
       console.log(response);
+      // if (response?.success) {
+      //   setBookingId(response._id);
+      //   setSuccess(true);
+      //   setBookingStep(5);
+      // }
+
       if (response?.success) {
-        setBookingId(response._id);
-        setSuccess(true);
-        setBookingStep(5);
+        const bookingId = response.data._id;
+
+        navigate("/payment", {
+          state: {
+            bookingId,
+            amount: selectedService.price,
+            userId: bookingData.customerName,
+            email: bookingData.customerEmail,
+            phone: bookingData.customerPhone,
+            country: "IN",
+          },
+        });
       } else {
         throw new Error(response.message || "Booking failed");
       }
