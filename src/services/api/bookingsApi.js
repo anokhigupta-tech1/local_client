@@ -54,8 +54,14 @@ export const getBookingById = async (id) => {
 
 // ✅ Cancel Booking
 export const cancelBooking = async (id) => {
-  const res = await API.put(`/bookings/${id}/cancel`);
-  return res.data;
+  const res = await fetch(`/api/bookings/${id}/cancel`, {
+    method: "DELETE", // ⚠️ IMPORTANT
+    headers: {
+      Authorization: `Bearer ${localStorage.getItem("token")}`,
+    },
+  });
+
+  return res.json();
 };
 
 // ✅ Update Payment Status
